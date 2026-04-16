@@ -303,9 +303,21 @@ function Toasts({ position = "top-right" }: { position: ToastPosition }) {
                 dismissAfterVisibleMs={toast.data?.dismissAfterVisibleMs}
                 toastId={toast.id}
               />
+              <button
+                aria-label="Dismiss notification"
+                className={cn(
+                  buttonVariants({ size: "icon-xs", variant: "ghost" }),
+                  "absolute top-2 right-2 z-10 size-5 rounded-sm p-0 text-muted-foreground hover:text-foreground",
+                )}
+                data-slot="toast-close"
+                onClick={() => toastManager.close(toast.id)}
+                type="button"
+              >
+                <XIcon className="size-3" />
+              </button>
               <Toast.Content
                 className={cn(
-                  "pointer-events-auto flex items-center justify-between gap-1.5 overflow-hidden px-3.5 py-3 text-sm transition-opacity duration-250 data-expanded:opacity-100",
+                  "pointer-events-auto flex items-center justify-between gap-1.5 overflow-hidden px-3.5 pr-8 py-3 text-sm transition-opacity duration-250 data-expanded:opacity-100",
                   hideCollapsedContent &&
                     "not-data-expanded:pointer-events-none not-data-expanded:opacity-0",
                 )}
@@ -344,15 +356,6 @@ function Toasts({ position = "top-right" }: { position: ToastPosition }) {
                     {toast.actionProps.children}
                   </Toast.Action>
                 )}
-                <button
-                  aria-label="Dismiss"
-                  className="shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground opacity-60 transition-opacity hover:opacity-100"
-                  data-slot="toast-close"
-                  onClick={() => toastManager.close(toast.id)}
-                  type="button"
-                >
-                  <XIcon className="size-3.5" />
-                </button>
               </Toast.Content>
             </Toast.Root>
           );
@@ -412,53 +415,58 @@ function AnchoredToasts() {
                       <Toast.Title data-slot="toast-title" />
                     </Toast.Content>
                   ) : (
-                    <Toast.Content className="pointer-events-auto flex items-center justify-between gap-1.5 overflow-hidden px-3.5 py-3 text-sm">
-                      <div className="flex min-w-0 flex-1 gap-2">
-                        {Icon && (
-                          <div
-                            className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
-                            data-slot="toast-icon"
-                          >
-                            <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
-                          </div>
-                        )}
-
-                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                          <div className="flex items-center gap-1">
-                            <Toast.Title
-                              className="min-w-0 wrap-break-word font-medium"
-                              data-slot="toast-title"
-                            />
-                            {toast.type === "error" &&
-                              typeof toast.description === "string" &&
-                              !toast.data?.hideCopyButton && (
-                                <CopyErrorButton text={toast.description} />
-                              )}
-                          </div>
-                          <Toast.Description
-                            className="min-w-0 select-text wrap-break-word text-muted-foreground"
-                            data-slot="toast-description"
-                          />
-                        </div>
-                      </div>
-                      {toast.actionProps && (
-                        <Toast.Action
-                          className={cn(buttonVariants({ size: "xs" }), "shrink-0")}
-                          data-slot="toast-action"
-                        >
-                          {toast.actionProps.children}
-                        </Toast.Action>
-                      )}
+                    <>
                       <button
-                        aria-label="Dismiss"
-                        className="shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground opacity-60 transition-opacity hover:opacity-100"
+                        aria-label="Dismiss notification"
+                        className={cn(
+                          buttonVariants({ size: "icon-xs", variant: "ghost" }),
+                          "absolute top-2 right-2 z-10 size-5 rounded-sm p-0 text-muted-foreground hover:text-foreground",
+                        )}
                         data-slot="toast-close"
                         onClick={() => anchoredToastManager.close(toast.id)}
                         type="button"
                       >
-                        <XIcon className="size-3.5" />
+                        <XIcon className="size-3" />
                       </button>
-                    </Toast.Content>
+                      <Toast.Content className="pointer-events-auto flex items-center justify-between gap-1.5 overflow-hidden px-3.5 pr-8 py-3 text-sm">
+                        <div className="flex min-w-0 flex-1 gap-2">
+                          {Icon && (
+                            <div
+                              className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
+                              data-slot="toast-icon"
+                            >
+                              <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
+                            </div>
+                          )}
+
+                          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <div className="flex items-center gap-1">
+                              <Toast.Title
+                                className="min-w-0 wrap-break-word font-medium"
+                                data-slot="toast-title"
+                              />
+                              {toast.type === "error" &&
+                                typeof toast.description === "string" &&
+                                !toast.data?.hideCopyButton && (
+                                  <CopyErrorButton text={toast.description} />
+                                )}
+                            </div>
+                            <Toast.Description
+                              className="min-w-0 select-text wrap-break-word text-muted-foreground"
+                              data-slot="toast-description"
+                            />
+                          </div>
+                        </div>
+                        {toast.actionProps && (
+                          <Toast.Action
+                            className={cn(buttonVariants({ size: "xs" }), "shrink-0")}
+                            data-slot="toast-action"
+                          >
+                            {toast.actionProps.children}
+                          </Toast.Action>
+                        )}
+                      </Toast.Content>
+                    </>
                   )}
                 </Toast.Root>
               </Toast.Positioner>
