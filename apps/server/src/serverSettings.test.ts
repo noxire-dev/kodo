@@ -92,6 +92,7 @@ it.layer(NodeServices.layer)("server settings", (it) => {
         enabled: true,
         binaryPath: "/usr/local/bin/claude",
         customModels: ["claude-custom"],
+        launchArgs: "",
       });
       assert.deepEqual(next.textGenerationModelSelection, {
         provider: "codex",
@@ -141,6 +142,35 @@ it.layer(NodeServices.layer)("server settings", (it) => {
     }).pipe(Effect.provide(makeServerSettingsLayer())),
   );
 
+  it.effect("drops stale text generation options when resetting model selection", () =>
+    Effect.gen(function* () {
+      const serverSettings = yield* ServerSettingsService;
+
+      yield* serverSettings.updateSettings({
+        textGenerationModelSelection: {
+          provider: "codex",
+          model: DEFAULT_SERVER_SETTINGS.textGenerationModelSelection.model,
+          options: {
+            reasoningEffort: "high",
+            fastMode: true,
+          },
+        },
+      });
+
+      const next = yield* serverSettings.updateSettings({
+        textGenerationModelSelection: {
+          provider: DEFAULT_SERVER_SETTINGS.textGenerationModelSelection.provider,
+          model: DEFAULT_SERVER_SETTINGS.textGenerationModelSelection.model,
+        },
+      });
+
+      assert.deepEqual(next.textGenerationModelSelection, {
+        provider: DEFAULT_SERVER_SETTINGS.textGenerationModelSelection.provider,
+        model: DEFAULT_SERVER_SETTINGS.textGenerationModelSelection.model,
+      });
+    }).pipe(Effect.provide(makeServerSettingsLayer())),
+  );
+
   it.effect("trims provider path settings when updates are applied", () =>
     Effect.gen(function* () {
       const serverSettings = yield* ServerSettingsService;
@@ -167,6 +197,7 @@ it.layer(NodeServices.layer)("server settings", (it) => {
         enabled: true,
         binaryPath: "/opt/homebrew/bin/claude",
         customModels: [],
+        launchArgs: "",
       });
     }).pipe(Effect.provide(makeServerSettingsLayer())),
   );
