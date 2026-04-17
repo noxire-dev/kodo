@@ -45,6 +45,33 @@ describe("buildVisibleToastLayout", () => {
     );
   });
 
+  it("skips ending toasts so remaining toasts reflow immediately on dismiss", () => {
+    const visibleToasts = [
+      { id: "a", height: 48, transitionStatus: "ending" as const },
+      { id: "b", height: 72 },
+      { id: "c", height: 24 },
+    ];
+
+    const layout = buildVisibleToastLayout(visibleToasts);
+
+    // frontmost height should be the first live toast, not the ending one
+    assert.equal(layout.frontmostHeight, 72);
+    assert.deepEqual(
+      layout.items.map(({ toast, visibleIndex, offsetY }) => ({
+        id: toast.id,
+        visibleIndex,
+        offsetY,
+      })),
+      [
+        // Ending toast collapses to front slot; data-ending-style drives its exit
+        { id: "a", visibleIndex: 0, offsetY: 0 },
+        // Live toasts get fresh indices starting at 0 so they move up in sync
+        { id: "b", visibleIndex: 0, offsetY: 0 },
+        { id: "c", visibleIndex: 1, offsetY: 72 },
+      ],
+    );
+  });
+
   it("treats missing heights as zero", () => {
     const layout = buildVisibleToastLayout([
       { id: "a" },
