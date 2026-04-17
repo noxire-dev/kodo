@@ -32,24 +32,33 @@ export function buildVisibleToastLayout<TToast extends object>(
   frontmostHeight: number;
   items: VisibleToastLayoutItem<TToast & ToastWithLayoutProps>[];
 } {
-  // Ending toasts are excluded from live index/offset calculations so the
-  // remaining toasts can reflow in parallel with the dismiss animation
-  // (otherwise the second toast only starts moving forward after the top
-  // toast's exit animation completes, causing a visible "stop and bump").
+  // Two parallel cursors:
+  //   - `full*`  advances on every toast, so an ending toast keeps the slot it
+  //     occupied before dismissal and its data-ending-style exit transform
+  //     originates from the correct position (critical for dismissing a
+  //     non-front toast in the expanded stack — otherwise it would snap to
+  //     Y=0 and slide off diagonally).
+  //   - `live*`  advances only on non-ending toasts, so live toasts reflow
+  //     past the vacated slot in parallel with the exit animation instead of
+  //     waiting for it to finish (which caused a visible "stop and bump").
+  let fullIndex = 0;
+  let fullOffsetY = 0;
   let liveIndex = 0;
   let liveOffsetY = 0;
 
   const items: VisibleToastLayoutItem<TToast & ToastWithLayoutProps>[] = visibleToasts.map(
     (toast) => {
+      const height = normalizeToastHeight(toast.height);
+
       if (toast.transitionStatus === "ending") {
-        // Keep ending toasts at their previous front position so their exit
-        // animation originates from the correct spot. The data-ending-style
-        // transform takes over their actual motion.
-        return {
+        const item = {
           toast,
-          visibleIndex: 0,
-          offsetY: 0,
+          visibleIndex: fullIndex,
+          offsetY: fullOffsetY,
         };
+        fullOffsetY += height;
+        fullIndex += 1;
+        return item;
       }
 
       const item = {
@@ -58,7 +67,9 @@ export function buildVisibleToastLayout<TToast extends object>(
         offsetY: liveOffsetY,
       };
 
-      liveOffsetY += normalizeToastHeight(toast.height);
+      fullOffsetY += height;
+      fullIndex += 1;
+      liveOffsetY += height;
       liveIndex += 1;
       return item;
     },
