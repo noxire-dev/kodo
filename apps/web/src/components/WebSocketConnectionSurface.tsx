@@ -167,6 +167,7 @@ export function WebSocketConnectionCoordinator() {
               error instanceof Error ? error.message : "Unable to restart the WebSocket.",
             data: {
               dismissAfterVisibleMs: 8_000,
+              hideCopyButton: true,
             },
           }),
         );
@@ -288,12 +289,15 @@ export function WebSocketConnectionCoordinator() {
                 children: "Retry",
                 onClick: triggerManualReconnect,
               },
+              data: {
+                hideCopyButton: true,
+              },
               description: describeExhaustedToast(),
               timeout: 0,
               title: "Disconnected from T3 Server",
               type: "error",
             })
-          : {
+          : stackedThreadToast({
               actionProps: {
                 children: "Retry now",
                 onClick: triggerManualReconnect,
@@ -307,8 +311,8 @@ export function WebSocketConnectionCoordinator() {
                   : `Reconnecting in ${formatRetryCountdown(status.nextRetryAt, nowMs)}... ${formatReconnectAttemptLabel(status)}`,
               timeout: 0,
               title: buildReconnectTitle(status),
-              type: "loading" as const,
-            };
+              type: "loading",
+            });
 
       if (toastIdRef.current) {
         toastManager.update(toastIdRef.current, toastPayload);
