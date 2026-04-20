@@ -226,6 +226,109 @@ function ToastDescriptionAndExpandable({
   );
 }
 
+type ToastIconComponent = (typeof TOAST_ICONS)[keyof typeof TOAST_ICONS];
+
+interface ToastBodyDescriptor {
+  readonly Icon: ToastIconComponent | null | undefined;
+  readonly stackedActionLayout: boolean;
+  readonly actionVariant: NonNullable<ThreadToastData["actionVariant"]>;
+  readonly copyErrorText: string | null;
+  readonly hasTrailingControls: boolean;
+  readonly inlineContentEndPad: string;
+}
+
+function deriveToastBodyDescriptor(toast: {
+  readonly type?: string | undefined;
+  readonly description?: unknown;
+  readonly actionProps?: unknown;
+  readonly data?: ThreadToastData | undefined;
+}): ToastBodyDescriptor {
+  const Icon = toast.type ? TOAST_ICONS[toast.type as keyof typeof TOAST_ICONS] : null;
+  const stackedActionLayout =
+    toast.actionProps !== undefined && toast.data?.actionLayout === "stacked-end";
+  const actionVariant: NonNullable<ThreadToastData["actionVariant"]> =
+    toast.data?.actionVariant ?? "default";
+  const copyErrorText =
+    toast.type === "error" && typeof toast.description === "string" && !toast.data?.hideCopyButton
+      ? toast.description
+      : null;
+  const hasTrailingControls = copyErrorText !== null || toast.actionProps !== undefined;
+  const inlineContentEndPad = hasTrailingControls ? "pr-6" : "pr-10";
+  return {
+    Icon,
+    stackedActionLayout,
+    actionVariant,
+    copyErrorText,
+    hasTrailingControls,
+    inlineContentEndPad,
+  };
+}
+
+interface ToastBodyContentProps extends ToastBodyDescriptor {
+  readonly actionProps: { readonly children?: ReactNode } | undefined;
+  readonly toastData: ThreadToastData | undefined;
+  readonly toastDescription: unknown;
+  readonly toastType: unknown;
+}
+
+function ToastBodyContent({
+  stackedActionLayout,
+  Icon,
+  copyErrorText,
+  actionProps,
+  actionVariant,
+  hasTrailingControls,
+  toastData,
+  toastDescription,
+  toastType,
+}: ToastBodyContentProps) {
+  return (
+    <>
+      <div className={cn("flex min-w-0 gap-2", !stackedActionLayout && "flex-1")}>
+        {Icon && (
+          <div
+            className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
+            data-slot="toast-icon"
+          >
+            <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
+          </div>
+        )}
+        <div
+          className={cn(
+            "flex min-h-0 min-w-0 flex-1 flex-col gap-0.5",
+            stackedActionLayout && "pr-5",
+          )}
+        >
+          <Toast.Title className="min-w-0 wrap-break-word font-medium" data-slot="toast-title" />
+          <ToastDescriptionAndExpandable
+            toastData={toastData}
+            toastDescription={toastDescription}
+            toastType={toastType}
+          />
+        </div>
+      </div>
+      {hasTrailingControls ? (
+        <div
+          className={cn(
+            "flex items-center gap-1.5",
+            stackedActionLayout ? "w-full justify-end" : "shrink-0",
+          )}
+        >
+          {copyErrorText !== null ? <CopyErrorButton text={copyErrorText} /> : null}
+          {actionProps ? (
+            <Toast.Action
+              className={cn(buttonVariants({ size: "xs", variant: actionVariant }), "shrink-0")}
+              data-slot="toast-action"
+            >
+              {actionProps.children}
+            </Toast.Action>
+          ) : null}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 type ToastPosition =
   | "top-left"
   | "top-center"
@@ -388,22 +491,12 @@ function Toasts({ position = "top-right" }: { position: ToastPosition }) {
         }
       >
         {visibleToastLayout.items.map(({ toast, visibleIndex, offsetY }) => {
-          const Icon = toast.type ? TOAST_ICONS[toast.type as keyof typeof TOAST_ICONS] : null;
           const hideCollapsedContent = shouldHideCollapsedToastContent(
             visibleIndex,
             visibleToastLayout.items.length,
           );
-          const stackedActionLayout =
-            toast.actionProps !== undefined && toast.data?.actionLayout === "stacked-end";
-          const actionVariant = toast.data?.actionVariant ?? "default";
-          const copyErrorText =
-            toast.type === "error" &&
-            typeof toast.description === "string" &&
-            !toast.data?.hideCopyButton
-              ? toast.description
-              : null;
-          const hasTrailingControls = copyErrorText !== null || toast.actionProps !== undefined;
-          const inlineContentEndPad = hasTrailingControls ? "pr-6" : "pr-10";
+          const bodyDescriptor = deriveToastBodyDescriptor(toast);
+          const { stackedActionLayout, inlineContentEndPad } = bodyDescriptor;
 
           return (
             <Toast.Root
@@ -504,89 +597,13 @@ function Toasts({ position = "top-right" }: { position: ToastPosition }) {
                     "not-data-expanded:pointer-events-none not-data-expanded:opacity-0",
                 )}
               >
-                {stackedActionLayout ? (
-                  <>
-                    <div className="flex min-w-0 gap-2">
-                      {Icon && (
-                        <div
-                          className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
-                          data-slot="toast-icon"
-                        >
-                          <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
-                        </div>
-                      )}
-
-                      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-0.5 pr-5">
-                        <Toast.Title
-                          className="min-w-0 wrap-break-word font-medium"
-                          data-slot="toast-title"
-                        />
-                        <ToastDescriptionAndExpandable
-                          toastData={toast.data}
-                          toastDescription={toast.description}
-                          toastType={toast.type}
-                        />
-                      </div>
-                    </div>
-                    {hasTrailingControls ? (
-                      <div className="flex w-full items-center justify-end gap-1.5">
-                        {copyErrorText !== null ? <CopyErrorButton text={copyErrorText} /> : null}
-                        {toast.actionProps ? (
-                          <Toast.Action
-                            className={cn(
-                              buttonVariants({ size: "xs", variant: actionVariant }),
-                              "shrink-0",
-                            )}
-                            data-slot="toast-action"
-                          >
-                            {toast.actionProps.children}
-                          </Toast.Action>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </>
-                ) : (
-                  <>
-                    <div className="flex min-w-0 flex-1 gap-2">
-                      {Icon && (
-                        <div
-                          className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
-                          data-slot="toast-icon"
-                        >
-                          <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
-                        </div>
-                      )}
-
-                      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-0.5">
-                        <Toast.Title
-                          className="min-w-0 wrap-break-word font-medium"
-                          data-slot="toast-title"
-                        />
-                        <ToastDescriptionAndExpandable
-                          toastData={toast.data}
-                          toastDescription={toast.description}
-                          toastType={toast.type}
-                        />
-                      </div>
-                    </div>
-                    {hasTrailingControls ? (
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        {copyErrorText !== null ? <CopyErrorButton text={copyErrorText} /> : null}
-                        {toast.actionProps ? (
-                          <Toast.Action
-                            className={cn(
-                              buttonVariants({ size: "xs", variant: actionVariant }),
-                              "shrink-0",
-                            )}
-                            data-slot="toast-action"
-                          >
-                            {toast.actionProps.children}
-                          </Toast.Action>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </>
-                )}
+                <ToastBodyContent
+                  {...bodyDescriptor}
+                  actionProps={toast.actionProps}
+                  toastData={toast.data}
+                  toastDescription={toast.description}
+                  toastType={toast.type}
+                />
               </Toast.Content>
             </Toast.Root>
           );
@@ -615,20 +632,10 @@ function AnchoredToasts() {
         {toasts
           .filter((toast) => shouldRenderThreadScopedToast(toast.data, activeThreadRef))
           .map((toast) => {
-            const Icon = toast.type ? TOAST_ICONS[toast.type as keyof typeof TOAST_ICONS] : null;
             const tooltipStyle = toast.data?.tooltipStyle ?? false;
             const positionerProps = toast.positionerProps;
-            const stackedActionLayout =
-              toast.actionProps !== undefined && toast.data?.actionLayout === "stacked-end";
-            const actionVariant = toast.data?.actionVariant ?? "default";
-            const copyErrorText =
-              toast.type === "error" &&
-              typeof toast.description === "string" &&
-              !toast.data?.hideCopyButton
-                ? toast.description
-                : null;
-            const hasTrailingControls = copyErrorText !== null || toast.actionProps !== undefined;
-            const inlineContentEndPad = hasTrailingControls ? "pr-6" : "pr-10";
+            const bodyDescriptor = deriveToastBodyDescriptor(toast);
+            const { stackedActionLayout, inlineContentEndPad } = bodyDescriptor;
 
             if (!positionerProps?.anchor) {
               return null;
@@ -681,93 +688,13 @@ function AnchoredToasts() {
                               ),
                         )}
                       >
-                        {stackedActionLayout ? (
-                          <>
-                            <div className="flex min-w-0 gap-2">
-                              {Icon && (
-                                <div
-                                  className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
-                                  data-slot="toast-icon"
-                                >
-                                  <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
-                                </div>
-                              )}
-
-                              <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-0.5 pr-5">
-                                <Toast.Title
-                                  className="min-w-0 wrap-break-word font-medium"
-                                  data-slot="toast-title"
-                                />
-                                <ToastDescriptionAndExpandable
-                                  toastData={toast.data}
-                                  toastDescription={toast.description}
-                                  toastType={toast.type}
-                                />
-                              </div>
-                            </div>
-                            {hasTrailingControls ? (
-                              <div className="flex w-full items-center justify-end gap-1.5">
-                                {copyErrorText !== null ? (
-                                  <CopyErrorButton text={copyErrorText} />
-                                ) : null}
-                                {toast.actionProps ? (
-                                  <Toast.Action
-                                    className={cn(
-                                      buttonVariants({ size: "xs", variant: actionVariant }),
-                                      "shrink-0",
-                                    )}
-                                    data-slot="toast-action"
-                                  >
-                                    {toast.actionProps.children}
-                                  </Toast.Action>
-                                ) : null}
-                              </div>
-                            ) : null}
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex min-w-0 flex-1 gap-2">
-                              {Icon && (
-                                <div
-                                  className="[&>svg]:h-lh [&>svg]:w-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
-                                  data-slot="toast-icon"
-                                >
-                                  <Icon className="in-data-[type=loading]:animate-spin in-data-[type=error]:text-destructive in-data-[type=info]:text-info in-data-[type=success]:text-success in-data-[type=warning]:text-warning in-data-[type=loading]:opacity-80" />
-                                </div>
-                              )}
-
-                              <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-0.5">
-                                <Toast.Title
-                                  className="min-w-0 wrap-break-word font-medium"
-                                  data-slot="toast-title"
-                                />
-                                <ToastDescriptionAndExpandable
-                                  toastData={toast.data}
-                                  toastDescription={toast.description}
-                                  toastType={toast.type}
-                                />
-                              </div>
-                            </div>
-                            {hasTrailingControls ? (
-                              <div className="flex shrink-0 items-center gap-1.5">
-                                {copyErrorText !== null ? (
-                                  <CopyErrorButton text={copyErrorText} />
-                                ) : null}
-                                {toast.actionProps ? (
-                                  <Toast.Action
-                                    className={cn(
-                                      buttonVariants({ size: "xs", variant: actionVariant }),
-                                      "shrink-0",
-                                    )}
-                                    data-slot="toast-action"
-                                  >
-                                    {toast.actionProps.children}
-                                  </Toast.Action>
-                                ) : null}
-                              </div>
-                            ) : null}
-                          </>
-                        )}
+                        <ToastBodyContent
+                          {...bodyDescriptor}
+                          actionProps={toast.actionProps}
+                          toastData={toast.data}
+                          toastDescription={toast.description}
+                          toastType={toast.type}
+                        />
                       </Toast.Content>
                     </>
                   )}
