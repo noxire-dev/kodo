@@ -16,7 +16,6 @@ import { Route as ChatIndexRouteImport } from './routes/_chat.index'
 import { Route as SettingsGeneralRouteImport } from './routes/settings.general'
 import { Route as SettingsConnectionsRouteImport } from './routes/settings.connections'
 import { Route as SettingsArchivedRouteImport } from './routes/settings.archived'
-import { Route as DevToastRouteImport } from './routes/dev.toast'
 import { Route as ChatDraftDraftIdRouteImport } from './routes/_chat.draft.$draftId'
 import { Route as ChatEnvironmentIdThreadIdRouteImport } from './routes/_chat.$environmentId.$threadId'
 
@@ -54,11 +53,6 @@ const SettingsArchivedRoute = SettingsArchivedRouteImport.update({
   path: '/archived',
   getParentRoute: () => SettingsRoute,
 } as any)
-const DevToastRoute = DevToastRouteImport.update({
-  id: '/dev/toast',
-  path: '/dev/toast',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ChatDraftDraftIdRoute = ChatDraftDraftIdRouteImport.update({
   id: '/draft/$draftId',
   path: '/draft/$draftId',
@@ -75,7 +69,6 @@ export interface FileRoutesByFullPath {
   '/': typeof ChatIndexRoute
   '/pair': typeof PairRoute
   '/settings': typeof SettingsRouteWithChildren
-  '/dev/toast': typeof DevToastRoute
   '/settings/archived': typeof SettingsArchivedRoute
   '/settings/connections': typeof SettingsConnectionsRoute
   '/settings/general': typeof SettingsGeneralRoute
@@ -85,7 +78,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/pair': typeof PairRoute
   '/settings': typeof SettingsRouteWithChildren
-  '/dev/toast': typeof DevToastRoute
   '/settings/archived': typeof SettingsArchivedRoute
   '/settings/connections': typeof SettingsConnectionsRoute
   '/settings/general': typeof SettingsGeneralRoute
@@ -98,7 +90,6 @@ export interface FileRoutesById {
   '/_chat': typeof ChatRouteWithChildren
   '/pair': typeof PairRoute
   '/settings': typeof SettingsRouteWithChildren
-  '/dev/toast': typeof DevToastRoute
   '/settings/archived': typeof SettingsArchivedRoute
   '/settings/connections': typeof SettingsConnectionsRoute
   '/settings/general': typeof SettingsGeneralRoute
@@ -112,7 +103,6 @@ export interface FileRouteTypes {
     | '/'
     | '/pair'
     | '/settings'
-    | '/dev/toast'
     | '/settings/archived'
     | '/settings/connections'
     | '/settings/general'
@@ -122,7 +112,6 @@ export interface FileRouteTypes {
   to:
     | '/pair'
     | '/settings'
-    | '/dev/toast'
     | '/settings/archived'
     | '/settings/connections'
     | '/settings/general'
@@ -134,7 +123,6 @@ export interface FileRouteTypes {
     | '/_chat'
     | '/pair'
     | '/settings'
-    | '/dev/toast'
     | '/settings/archived'
     | '/settings/connections'
     | '/settings/general'
@@ -147,7 +135,6 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRouteWithChildren
   PairRoute: typeof PairRoute
   SettingsRoute: typeof SettingsRouteWithChildren
-  DevToastRoute: typeof DevToastRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -201,13 +188,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsArchivedRouteImport
       parentRoute: typeof SettingsRoute
     }
-    '/dev/toast': {
-      id: '/dev/toast'
-      path: '/dev/toast'
-      fullPath: '/dev/toast'
-      preLoaderRoute: typeof DevToastRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_chat/draft/$draftId': {
       id: '/_chat/draft/$draftId'
       path: '/draft/$draftId'
@@ -259,7 +239,6 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRouteWithChildren,
   PairRoute: PairRoute,
   SettingsRoute: SettingsRouteWithChildren,
-  DevToastRoute: DevToastRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
