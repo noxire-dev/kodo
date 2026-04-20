@@ -779,13 +779,11 @@ export default function GitActionsControl({
               : `${result.branch} is already synchronized.`,
           data: threadToastData,
         }),
-        error: (err) =>
-          stackedThreadToast({
-            type: "error",
-            title: "Pull failed",
-            description: err instanceof Error ? err.message : "An error occurred.",
-            ...(threadToastData !== undefined ? { data: threadToastData } : {}),
-          }),
+        error: (err) => ({
+          title: "Pull failed",
+          description: err instanceof Error ? err.message : "An error occurred.",
+          data: threadToastData,
+        }),
       });
       void promise.catch(() => undefined);
       return;
