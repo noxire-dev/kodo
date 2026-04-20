@@ -278,6 +278,9 @@ export function WebSocketConnectionCoordinator() {
     if (shouldShowReconnectToast || shouldShowOfflineToast || shouldShowExhaustedToast) {
       const toastPayload = shouldShowOfflineToast
         ? stackedThreadToast({
+            data: {
+              hideCopyButton: true,
+            },
             description: describeOfflineToast(),
             timeout: 0,
             title: "Offline",

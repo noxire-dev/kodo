@@ -12,9 +12,9 @@ export type StackedThreadToastOptions = {
   timeout?: number;
   priority?: "low" | "high";
   actionProps?: ComponentPropsWithoutRef<"button">;
-  /** Merged into `data` after `actionLayout: "stacked-end"`. */
+  /** Merged into `data`; `actionLayout` is always forced to `"stacked-end"` by the helper. */
   actionVariant?: ThreadToastData["actionVariant"];
-  data?: ThreadToastData;
+  data?: Omit<ThreadToastData, "actionLayout">;
 };
 
 /**
@@ -25,9 +25,11 @@ export function stackedThreadToast(
 ): ToastManagerAddOptions<ThreadToastData> {
   const { type, title, description, timeout, priority, actionProps, actionVariant, data } = options;
 
+  // Helper-owned `actionLayout` must win over any caller-provided `data`, so spread
+  // the caller's data first and apply `actionLayout: "stacked-end"` last.
   const mergedData: ThreadToastData = {
-    actionLayout: "stacked-end",
     ...(data !== undefined ? data : {}),
+    actionLayout: "stacked-end",
   };
   if (actionVariant !== undefined) {
     mergedData.actionVariant = actionVariant;

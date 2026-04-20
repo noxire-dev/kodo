@@ -780,7 +780,8 @@ function AnchoredToasts() {
   );
 }
 
-export { stackedThreadToast, type StackedThreadToastOptions } from "./toastHelpers";
+export { stackedThreadToast } from "./toastHelpers";
+export type { StackedThreadToastOptions } from "./toastHelpers";
 
 export {
   ToastProvider,
